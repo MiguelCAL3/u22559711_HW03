@@ -1,0 +1,404 @@
+﻿@model u22559711_HW03.Models.CombinedReportViewModel
+@using u22559711_HW03.Models
+
+@{
+    ViewBag.Title = "TinyMCE";
+}
+
+<style>
+    .tableContainer {
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        padding: 20px;
+        margin: 20px auto;
+    }
+</style>
+<link href="~/Content/Site.css" rel="stylesheet" />
+
+<div class="report" style="background-color:lightgrey; border: 2px solid black; border-color:black; border-radius: 10px; padding: 15px">
+    <h1>Report</h1>
+    <br />
+
+    <!--Report Section-->
+
+    <h2>Total summary for your 2015 year of best performing books</h2>
+    <br />
+    <canvas id="myChart" width="400" height="150"></canvas>
+    <br />
+    <div class="row">
+        <div class="col-6">
+            <!-- Fixed the class attribute -->
+            <h2>Top 10 best performers</h2>
+            <p>We would recommend getting more stock of these books</p>
+            <canvas id="my2ndChart" width="200" height="150"></canvas>
+        </div>
+        <div class="col-6">
+            <!-- Fixed the class attribute -->
+            <h2>Top 10 Worst Performers</h2>
+            <p>We would recommend replacing these books for next year</p>
+            <canvas id="my3rdChart" width="200" height="150"></canvas>
+        </div>
+    </div>
+</div>
+<!--End of report Section-->
+
+<script src="~/Scripts/jquery-3.4.1.min.js"></script>
+<script src="~/scripts/tinymce/tinymce.min.js"></script>
+<script>
+    tinymce.init({
+        selector: 'textarea',  // change this value according to your HTML
+        toolbar: [
+            { name: 'history', items: ['undo', 'redo'] },
+            { name: 'styles', items: ['styles'] },
+            { name: 'formatting', items: ['bold', 'italic', 'underlin'] },
+            { name: 'alignment', items: ['alignleft', 'aligncenter', 'alignright', 'alignjustify'] },
+            { name: 'indentation', items: ['outdent', 'indent'] }
+        ]
+    });
+</script>
+
+@using (Html.BeginForm("SAVE", "Home", FormMethod.Post, new { onsubmit = "refreshPage()" }))
+{
+    <br />
+    <div>
+        
+    </div>
+
+    <div id="file-generator" class="d-flex justify-content-end" style="padding-top: 10px;">
+        <div class="btn-group">
+            <div class="" style="padding-right: 40px; padding-top: 8px">
+                <p>Export your file:</p>
+            </div>
+            <div style="padding-right: 15px;">
+                @Html.TextAreaFor(model => model.SingleFile.Content, new { id = "file-editor", style = "width: 300px; height: 0px", placeholder = "Add some notes", @class = "form-control" })
+            </div>
+            <div style="padding-right: 15px;">
+                @Html.TextBoxFor(model => model.SingleFile.FileName, new { @class = "form-control", style = "width: 300px;", placeholder = "Add File Name" })
+            </div>
+            @Html.DropDownListFor(model => model.SingleFile.Extension,
+              new[]
+              {
+                new SelectListItem() { Text = "DOCX", Value = ".docx" },
+                new SelectListItem() { Text = "PDF", Value = ".pdf", Selected = true },
+                new SelectListItem() { Text = "XPS", Value = ".xps" },
+                new SelectListItem() { Text = "HTML", Value = ".html" },
+                new SelectListItem() { Text = "MHTML", Value = ".mhtml" },
+                new SelectListItem() { Text = "RTF", Value = ".rtf" },
+                new SelectListItem() { Text = "XML", Value = ".xml" },
+                new SelectListItem() { Text = "TXT", Value = ".txt" },
+                new SelectListItem() { Text = "PNG", Value = ".png" },
+                new SelectListItem() { Text = "JPEG", Value = ".jpeg" },
+                new SelectListItem() { Text = "GIF", Value = ".gif" },
+                new SelectListItem() { Text = "BMP", Value = ".bmp" },
+                new SelectListItem() { Text = "TIFF", Value = ".tiff" },
+                new SelectListItem() { Text = "WMP", Value = ".wmp" }
+              },
+                new { @class = "form-control", style = "width: 150px;" })
+
+            @* Move the Download button after the SelectListItems *@
+            <div style="padding-right: 15px; padding-left: 15px;">
+                <input type="submit" class="btn btn-primary" value="Save" style="width: 150px;" />
+            </div>
+
+        </div>
+    </div>
+    <br />
+    <br />
+    <hr />
+}
+
+<script src="~/Scripts/Viewer/fileViewer.js"></script>
+<div class="tableContainer" >
+    <div>
+        <h4>Archive</h4>
+        <br />
+    </div>
+    <div style="height: 400px; overflow: auto;">
+        <table class="table table-hover table-striped">
+            <thead class="bg-secondary text-white" style="position: sticky; top: 0;">
+                <tr>
+                    <th width="75%">FILE NAME</th>
+                    <th>DOWNLOAD</th>
+                    <th>DELETE</th>
+                </tr>
+            </thead>
+            @foreach (FileModel file in Model.FileList)
+            {
+                <tr>
+                    <td>@file.FileName</td>
+                    <td class="t">@Html.ActionLink("Download", "DownloadFile", new { fileName = file.FileName }, new { @class = "btn btn-success btn-sm", style = "width: 150px;" })</td>
+                    <td class="t">@Html.ActionLink("Delete", "DeleteFile", new { fileName = file.FileName }, new { @class = "btn btn-danger btn-sm", style = "width: 150px;" })</td>
+                </tr>
+
+
+            }
+        </table>
+    </div>
+</div>
+
+<br />
+<br />
+<hr />
+<h2>Previous Attempt: </h2>
+<label for="filename">Enter Filename:</label>
+<input type="text" id="filename" name="filename" required>
+
+<label for="fileType">Select File Type:</label>
+<select id="fileType" name="fileType" required>
+    <option value="pdf">PDF</option>
+    <option value="excel">Excel</option>
+    <!-- Add more file types as needed -->
+</select>
+
+<input type="button" value="Export Report" id="exportButton" onclick="exportReport()">
+
+<!-- Add a hidden textarea to store the captured HTML -->
+<textarea id="reportHTML" style="display: none;"></textarea>
+
+
+<!--Below is the javascript for the report as well as the testing PDF a different method-->
+
+@section scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.min.js"></script>
+    <script type="text/javascript" src="https://html2canvas.hertzen.com/dist/html2canvas.js"></script>
+
+    <script>
+
+        function refreshPage() {
+
+            // Refresh the page
+            location.reload();
+        }
+
+        var chartData = @Html.Raw(ViewBag.ChartData);
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: chartData.map(x => x.Label),
+                datasets: [{
+                    label: 'Borrow Count',
+                    data: chartData.map(x => x.Value),
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        var top10chartData = @Html.Raw(ViewBag.Top10Books);
+        var ctx2 = document.getElementById('my2ndChart').getContext('2d'); // Changed the variable name
+        var my2ndChart = new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: top10chartData.map(x => x.Label),
+                datasets: [{
+                    data: top10chartData.map(x => x.Value),
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)',
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(153, 102, 255, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'right'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                var label = top10chartData[context.dataIndex].Label;
+                                var value = top10chartData[context.dataIndex].Value;
+                                var total = top10chartData.reduce((acc, data) => acc + data.Value, 0);
+                                var percentage = ((value / total) * 100).toFixed(2) + '%';
+                                return `${label}: ${value} (${percentage})`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        var top10WorstchartData = @Html.Raw(ViewBag.Top10leastBooks);
+        var ctx3 = document.getElementById('my3rdChart').getContext('2d'); // Changed the variable name
+        var my3rdChart = new Chart(ctx3, {
+            type: 'pie',
+            data: {
+                labels: top10WorstchartData.map(x => x.Label),
+                datasets: [{
+                    data: top10WorstchartData.map(x => x.Value),
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)',
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(153, 102, 255, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'right'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                var label = top10WorstchartData[context.dataIndex].Label;
+                                var value = top10WorstchartData[context.dataIndex].Value;
+                                var total = top10WorstchartData.reduce((acc, data) => acc + data.Value, 0);
+                                var percentage = ((value / total) * 100).toFixed(2) + '%';
+                                return `${label}: ${value} (${percentage})`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        function addToArchiveTable(filename) {
+            var archiveTable = document.querySelector(".table");
+
+            var newRow = document.createElement("tr");
+            var fileNameCell = document.createElement("td");
+            fileNameCell.textContent = filename;
+
+            var actionCell = document.createElement("td");
+            var downloadBtn = document.createElement("a");
+            downloadBtn.classList.add("btn", "btn-success");
+            downloadBtn.textContent = "Download";
+            downloadBtn.href = "javascript:void(0)"; // Set the href attribute to "javascript:void(0)"
+
+            var deleteLink = document.createElement("a");
+            deleteLink.classList.add("btn", "btn-danger");
+            deleteLink.textContent = "Delete";
+            deleteLink.href = "javascript:void(0)";
+            deleteLink.onclick = function () {
+                confirmDelete(filename);
+            };
+            deleteLink.style.color = "black";
+            downloadBtn.style.color = "black";
+
+            downloadBtn.addEventListener("click", function () {
+                var filenameToDownload = newRow.getAttribute('data-filename');
+                downloadFile(filenameToDownload);
+            });
+
+            // Add a data-filename attribute to store the filename for each row
+            newRow.setAttribute('data-filename', filename);
+
+            actionCell.appendChild(downloadBtn);
+            actionCell.appendChild(deleteLink);
+            newRow.appendChild(fileNameCell);
+            newRow.appendChild(actionCell);
+            archiveTable.appendChild(newRow);
+        }
+
+        function deleteRow(filename) {
+            var archiveTable = document.querySelector(".table");
+            var rows = archiveTable.getElementsByTagName('tr');
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
+                if (row.getAttribute('data-filename') === filename) {
+                    archiveTable.removeChild(row);
+                    break;
+                }
+            }
+        }
+
+        function confirmDelete(filename) {
+            var confirmDelete = confirm("Are you sure you want to delete the file: " + filename + "?");
+            if (confirmDelete) {
+                deleteRow(filename);
+            }
+        }
+
+        function exportReport() {
+            var report = document.querySelector('.report');
+            var filename = document.getElementById('filename').value || 'report';
+            var fileType = document.getElementById('fileType').value || 'pdf';
+
+            if (fileType === 'pdf') {
+                exportToPDF(report, filename);
+            } else if (fileType === 'excel') {
+                exportToExcel(report, filename);
+            }
+        }
+
+        function exportToPDF(element, filename) {
+            html2canvas(element).then(function (canvas) {
+                var doc = new jsPDF('portrait');
+                doc.setFontSize(20);
+                doc.text(15, 15, "Interactive Chart Report");
+                var imgData = canvas.toDataURL('image/jpeg');
+                doc.addImage(imgData, 'JPEG', 10, 30, 190, 100);
+                doc.save(filename + '.pdf');
+
+                // Add the generated PDF to the archive table
+                addToArchiveTable(filename + '.pdf');
+            });
+        }
+
+        // Function to download the file
+        function downloadFile(filename) {
+            var downloadBtn = document.querySelector('[data-filename="' + filename + '"]');
+            if (downloadBtn) {
+                var clickedFilename = downloadBtn.getAttribute('data-filename');
+                exportToPDF(document.querySelector('.report'), clickedFilename);
+            }
+        }
+    </script>
+}
+

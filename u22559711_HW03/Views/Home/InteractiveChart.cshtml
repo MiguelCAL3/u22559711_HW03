@@ -1,0 +1,294 @@
+﻿@{
+    ViewBag.Title = "Interactive Chart";
+}
+
+
+
+<h1>Report</h1>
+<br />
+
+<div class="report" style="background-color:lightgrey; border: 2px solid black; border-color:black; border-radius: 10px; padding: 15px">
+    <h2>Total summary for your 2015 year of best performing books</h2>
+    <br />
+    <canvas id="myChart" width="400" height="150"></canvas>
+    <br />
+    <div class="row">
+        <div class="col-6"> <!-- Fixed the class attribute -->
+            <h2>Top 10 best performers</h2>
+            <p>We would recommend getting more stock of these books</p>
+            <canvas id="my2ndChart" width="200" height="150"></canvas>
+        </div>
+        <div class="col-6"> <!-- Fixed the class attribute -->
+            <h2>Top 10 Worst Performers</h2>
+            <p>We would recommend replacing these books for next year</p>
+            <canvas id="my3rdChart" width="200" height="150"></canvas>
+        </div>
+    </div>
+</div>
+
+<br />
+
+<label for="filename">Enter Filename:</label>
+<input type="text" id="filename" name="filename" required>
+
+<label for="fileType">Select File Type:</label>
+<select id="fileType" name="fileType" required>
+    <option value="pdf">PDF</option>
+    <option value="excel">Excel</option>
+    <!-- Add more file types as needed -->
+</select>
+
+<input type="button" value="Export Report" id="exportButton" onclick="exportReport()">
+
+<!-- Add a hidden textarea to store the captured HTML -->
+<textarea id="reportHTML" style="display: none;"></textarea>
+
+<br />
+<h1>Archive</h1>
+<table class="table">
+    <tr>
+        <th>
+            Report Name
+        </th>
+        <th>
+            Action
+            
+        </th>
+    </tr>
+</table>
+
+@section scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.min.js"></script>
+    <script type="text/javascript" src="https://html2canvas.hertzen.com/dist/html2canvas.js"></script>
+
+    <script>
+        var chartData = @Html.Raw(ViewBag.ChartData);
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: chartData.map(x => x.Label),
+                datasets: [{
+                    label: 'Borrow Count',
+                    data: chartData.map(x => x.Value),
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        var top10chartData = @Html.Raw(ViewBag.Top10Books);
+        var ctx2 = document.getElementById('my2ndChart').getContext('2d'); // Changed the variable name
+        var my2ndChart = new Chart(ctx2, {
+            type: 'pie',
+            data: {
+                labels: top10chartData.map(x => x.Label),
+                datasets: [{
+                    data: top10chartData.map(x => x.Value),
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)',
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(153, 102, 255, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'right'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                var label = top10chartData[context.dataIndex].Label;
+                                var value = top10chartData[context.dataIndex].Value;
+                                var total = top10chartData.reduce((acc, data) => acc + data.Value, 0);
+                                var percentage = ((value / total) * 100).toFixed(2) + '%';
+                                return `${label}: ${value} (${percentage})`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        var top10WorstchartData = @Html.Raw(ViewBag.Top10leastBooks);
+        var ctx3 = document.getElementById('my3rdChart').getContext('2d'); // Changed the variable name
+        var my3rdChart = new Chart(ctx3, {
+            type: 'pie',
+            data: {
+                labels: top10WorstchartData.map(x => x.Label),
+                datasets: [{
+                    data: top10WorstchartData.map(x => x.Value),
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)',
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(153, 102, 255, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'right'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                var label = top10WorstchartData[context.dataIndex].Label;
+                                var value = top10WorstchartData[context.dataIndex].Value;
+                                var total = top10WorstchartData.reduce((acc, data) => acc + data.Value, 0);
+                                var percentage = ((value / total) * 100).toFixed(2) + '%';
+                                return `${label}: ${value} (${percentage})`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        function addToArchiveTable(filename) {
+            var archiveTable = document.querySelector(".table");
+
+            var newRow = document.createElement("tr");
+            var fileNameCell = document.createElement("td");
+            fileNameCell.textContent = filename;
+
+            var actionCell = document.createElement("td");
+            var downloadBtn = document.createElement("a");
+            downloadBtn.classList.add("btn", "btn-success");
+            downloadBtn.textContent = "Download";
+            downloadBtn.href = "javascript:void(0)"; // Set the href attribute to "javascript:void(0)"
+
+            var deleteLink = document.createElement("a");
+            deleteLink.classList.add("btn", "btn-danger");
+            deleteLink.textContent = "Delete";
+            deleteLink.href = "javascript:void(0)";
+            deleteLink.onclick = function () {
+                confirmDelete(filename);
+            };
+            deleteLink.style.color = "black";
+            downloadBtn.style.color = "black";
+
+            downloadBtn.addEventListener("click", function () {
+                var filenameToDownload = newRow.getAttribute('data-filename');
+                downloadFile(filenameToDownload);
+            });
+
+            // Add a data-filename attribute to store the filename for each row
+            newRow.setAttribute('data-filename', filename);
+
+            actionCell.appendChild(downloadBtn);
+            actionCell.appendChild(deleteLink);
+            newRow.appendChild(fileNameCell);
+            newRow.appendChild(actionCell);
+            archiveTable.appendChild(newRow);
+        }
+
+        function deleteRow(filename) {
+            var archiveTable = document.querySelector(".table");
+            var rows = archiveTable.getElementsByTagName('tr');
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
+                if (row.getAttribute('data-filename') === filename) {
+                    archiveTable.removeChild(row);
+                    break;
+                }
+            }
+        }
+
+        function confirmDelete(filename) {
+            var confirmDelete = confirm("Are you sure you want to delete the file: " + filename + "?");
+            if (confirmDelete) {
+                deleteRow(filename);
+            }
+        }
+
+        function exportReport() {
+            var report = document.querySelector('.report');
+            var filename = document.getElementById('filename').value || 'report';
+            var fileType = document.getElementById('fileType').value || 'pdf';
+
+            if (fileType === 'pdf') {
+                exportToPDF(report, filename);
+            } else if (fileType === 'excel') {
+                exportToExcel(report, filename);
+            }
+        }
+
+        function exportToPDF(element, filename) {
+            html2canvas(element).then(function (canvas) {
+                var doc = new jsPDF('portrait');
+                doc.setFontSize(20);
+                doc.text(15, 15, "Interactive Chart Report");
+                var imgData = canvas.toDataURL('image/jpeg');
+                doc.addImage(imgData, 'JPEG', 10, 30, 190, 100);
+                doc.save(filename + '.pdf');
+
+                // Add the generated PDF to the archive table
+                addToArchiveTable(filename + '.pdf');
+            });
+        }
+
+        // Function to download the file
+        function downloadFile(filename) {
+            var downloadBtn = document.querySelector('[data-filename="' + filename + '"]');
+            if (downloadBtn) {
+                var clickedFilename = downloadBtn.getAttribute('data-filename');
+                exportToPDF(document.querySelector('.report'), clickedFilename);
+            }
+        }
+    </script>
+}

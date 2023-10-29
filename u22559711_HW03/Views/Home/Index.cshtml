@@ -1,0 +1,290 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+@model u22559711_HW03.Models.CombinedViewModelSB
+@using PagedList
+@using PagedList.Mvc
+
+<style>
+    .pager-container {
+        text-align: center; /* Center the pager within the container */
+    }
+
+    .page-link {
+        display: inline-block; /* Display the page links inline */
+        margin: 5px; /* Add some margin for spacing between page links */
+        padding: 5px 10px; /* Add padding to the page links for a more spacious appearance */
+        border: 1px solid #ccc; /* Add a border for a button-like appearance */
+        background-color: #f5f5f5; /* Set a background color */
+        border-radius: 5px; /* Round the edges of the page links */
+        
+        color: #333; /* Set the text color */
+        text-decoration: none; /* Remove underline from the links */
+        font-size: 10px;
+        font-weight: bold;
+    }
+
+    .page-link:hover {
+            background-color: #ccc; /* Change background color on hover */
+        }
+
+    table.table-striped {
+        font-size: 12px; /* Adjust the font size as needed */
+    }
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        margin: 0;
+        padding: 0;
+    }
+
+    .tableContainer {
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        padding: 20px;
+        margin: 20px auto;
+    }
+
+    h2 {
+        font-size: 24px;
+        color: #333;
+    }
+
+    .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #007BFF;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        text-decoration: none;
+    }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 10px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #333;
+        color: #fff;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    .modal-content {
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-title {
+        font-size: 18px;
+    }
+
+    .modal-body {
+        padding: 20px;
+    }
+</style>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+<h1>Home</h1>
+<div class=" = tableContainer">
+    
+    <div class="row">
+        <div class="col-md-6">
+
+            <div style="display: flex; align-items: center;">
+                <h2 style="margin-right: 10px;">Students List: </h2>
+                <p>
+                    <a href="#" class="create-link btn btn-dark" data-url="@Url.Action("Create", "students")">Create Student</a>
+                </p>
+            </div>
+
+
+            <table class="table table-striped" style="width:100%">
+                <thead class="bg-secondary text-white">
+                    <tr>
+                        <th>Id</th>
+                        <th>name</th>
+                        <th>surname</th>
+                        <th>birthdate</th>
+                        <th>class</th>
+                        <th>gender</th>
+                        <th>point</th>
+                    </tr>
+                </thead>
+                @foreach (var item in Model.Students)
+                {
+                    <tr>
+                        <td>@Html.DisplayFor(modelItem => item.studentId)</td>
+                        <td>@Html.DisplayFor(modelItem => item.name)</td>
+                        <td>@Html.DisplayFor(modelItem => item.surname)</td>
+                        <td>@Html.DisplayFor(modelItem => item.birthdate)</td>
+                        <td>@Html.DisplayFor(modelItem => item.@class)</td>
+                        <td>@Html.DisplayFor(modelItem => item.gender)</td>
+                        <td>@Html.DisplayFor(modelItem => item.point)</td>
+
+                    </tr>
+                }
+            </table>
+
+            @{
+                var pagerContainerStyle = "pager-container";
+                var pageLinkStyle = "page-link";
+            }
+            <div class="@pagerContainerStyle">
+                <div>
+                    @Html.PagedListPager(Model.Students, page => Url.Action("Index", new { studentPage = page }), new PagedListRenderOptions
+                    {
+                        LiElementClasses = new[] { pageLinkStyle }
+                    })
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+
+            <div style="display: flex; align-items: center;">
+                <h2 style="margin-right: 10px;">Books List: </h2>
+                <p>
+                    <a href="#" class="create-link btn btn-dark" data-url="@Url.Action("Create", "books")">Create Book</a>
+                </p>
+            </div>
+
+            <table class="table table-striped" style="width:100%">
+                <thead class="bg-secondary text-white">
+                    <tr>
+                        <th>bookId</th>
+                        <th>name</th>
+                        <th>pagecount</th>
+                        <th>point</th>
+                        <th>author name</th>
+                        <th>type</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                @foreach (var item in Model.Books)
+                {
+                    <tr>
+                        <td>@Html.DisplayFor(modelItem => item.bookId)</td>
+                        <td>@Html.DisplayFor(modelItem => item.name)</td>
+                        <td>@Html.DisplayFor(modelItem => item.pagecount)</td>
+                        <td>@Html.DisplayFor(modelItem => item.point)</td>
+                        <td>@Html.DisplayFor(modelItem => item.authors.name)</td>
+                        <td>@Html.DisplayFor(modelItem => item.types.name)</td>
+                        <td>Available</td>
+                        @*<td>
+                                @{
+                                    if (item.broughtDate == null)
+                                    {
+                                        <span class="status-out">Out</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-available">Available</span>
+                                    }
+                                }
+                            </td>*@
+                    </tr>
+                }
+            </table>
+
+            <div class="@pagerContainerStyle">
+                <div>
+                    @Html.PagedListPager(Model.Books, page => Url.Action("Index", new { bookPage = page }), new PagedListRenderOptions
+                    {
+                        LiElementClasses = new[] { pageLinkStyle }
+                    })
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!--<div class="pagination-container">-->
+    @*Page @(Model.Students.PageCount < Model.Students.PageNumber ? 0 : Model.Students.PageNumber) of @Model.Students.PageCount*@
+    <!--</div>-->
+
+
+
+
+
+
+
+
+
+
+    <div id="myModal" class="modal fade" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Sample Async CRUD</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="modal-content">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(function () {
+
+            // Function to handle Edit link click event in the Combined View and Details modal
+            $(".edit-link, .edit-link-in-modal").click(function (e) {
+
+                e.preventDefault();
+                var url = $(this).data("url");
+
+                $.get(url, function (data) {
+                    $("#modal-content").empty();
+                    $("#modal-content").html(data);
+                    $("#myModal").modal("show");
+                });
+            });
+
+            // Function to handle form submission within the modal
+            $("#modal-content").on("submit", "form", function (e) {
+                e.preventDefault();
+                var form = $(this);
+                var url = form.attr("action");
+                var formData = form.serialize();
+
+                $.post(url, formData, function (data) {
+                    $("#myModal").modal("hide");
+                    location.reload();
+                });
+            });
+
+            // Function to handle other links (details, delete, create) within the modal
+            $(".details-link, .delete-link, .create-link, .create-lookup-link").click(function (e) {
+
+                e.preventDefault();
+                var url = $(this).data("url");
+
+                $.get(url, function (data) {
+                    $("#modal-content").empty();
+                    $("#modal-content").html(data);
+                    $("#myModal").modal("show");
+                });
+            });
+        });
+    </script>
